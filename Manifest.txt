@@ -4,4 +4,14 @@ README.txt
 Rakefile
 bin/appfactory
 lib/appfactory.rb
-test/test_appfactory.rb
+template/appfactory.app.template/Contents/Info.plist
+template/appfactory.app.template/Contents/MacOS/appfactory
+template/appfactory.app.template/Contents/PkgInfo
+template/appfactory.app.template/Contents/Resources/English.lproj/InfoPlist.strings
+template/appfactory.app.template/Contents/Resources/English.lproj/MainMenu.nib/designable.nib
+template/appfactory.app.template/Contents/Resources/English.lproj/MainMenu.nib/keyedobjects.nib
+template/appfactory.app.template/Contents/Resources/app.rb
+template/appfactory.app.template/Contents/Resources/growl.rb
+template/appfactory.app.template/Contents/Resources/macruby.icns
+template/appfactory.app.template/Contents/Resources/macruby_status.png
+template/appfactory.app.template/Contents/Resources/rb_main.rb
