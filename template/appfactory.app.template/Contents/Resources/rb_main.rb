@@ -57,9 +57,31 @@ module AppFactory
    status_bar
    @app.run
  end
+
+ def menu_item(title, &block)
+    mi = NSMenuItem.new
+    mi.title = title
+    mi.action = "#{title}Delegate:"
+    AppFactoryDelegate.send(:class_eval, "def #{title}Delegate=(blk); @#{title}Delegate = blk; end")
+    AppFactoryDelegate.send(:class_eval, "def #{title}Delegate(sender); @#{title}Delegate.call ; end")
+    delegate = AppFactory.delegate
+    delegate.send("#{title}Delegate=".to_sym, block)
+    mi.target = delegate
+    AppFactory.menu.addItem mi
+ end
+
+ def self.delegate
+   @delegate ||= AppFactoryDelegate.new
+ end
+
+ class AppFactoryDelegate
+ end
+
 end
 
 $: << AppFactory.resources_dir
+include AppFactory
 require 'growl'
+require 'appmain'
 
 AppFactory.start
