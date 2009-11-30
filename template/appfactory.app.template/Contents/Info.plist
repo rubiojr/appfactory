@@ -9,7 +9,7 @@
 	<key>CFBundleIdentifier</key>
 	<string>org.netcorex.appfactory</string>
   <key>CFBundleIconFile</key>
-  <string>macruby.icns</string>
+  <string>ruby.icns</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>

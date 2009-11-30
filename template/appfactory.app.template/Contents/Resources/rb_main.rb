@@ -42,7 +42,7 @@ module AppFactory
     @status_bar = NSStatusBar.systemStatusBar
     @status_item = @status_bar.statusItemWithLength(NSVariableStatusItemLength)
     @status_item.setMenu menu 
-    img = NSImage.new.initWithContentsOfFile "#{AppFactory.resources_dir}/macruby_status.png"
+    img = NSImage.new.initWithContentsOfFile "#{AppFactory.resources_dir}/ruby_statusbar.png"
     @status_item.setImage(img)
     Growl.growl 'InitDone', app_name, "Here we go!"
     @status_bar

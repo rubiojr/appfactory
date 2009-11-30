@@ -1,5 +1,49 @@
 #!/usr/bin/env ruby
 require 'rubygems'
 require 'choice'
+require 'fileutils'
+
 TMPLDIR="#{File.dirname(__FILE__)}/../template"
-puts TMPLDIR
+
+Choice.options do
+  banner 'Usage: appfactory <app_name>'
+  header ''
+  header 'Available options:'
+
+  option :help do
+    long '--help'
+    short '-h'
+    desc 'Show this message'
+    action do 
+      Choice.help
+      exit
+    end
+  end
+end
+
+appname = ARGV[0]
+
+if appname.nil?
+  Choice.help
+end
+
+appdir = appname.downcase
+appversion = '0.1'
+puts "Creating application directory #{appdir}"
+if File.exist?(appdir)
+  $stderr.puts "Directory #{appdir} already exists"
+  exit 1
+end
+Dir.mkdir appdir
+
+puts "Creating the Application Bundle..."
+FileUtils.cp_r("#{TMPLDIR}/appfactory.app.template", "#{appdir}/#{appname}.app")
+
+plist = IO.read("#{appdir}/#{appname}.app/Contents/Info.plist")
+File.open("#{appdir}/#{appname}.app/Contents/Info.plist", 'w') do |f|
+  plist.gsub! "@@CFBUNDLENAME@@", appname
+  plist.gsub! "@@CFBUNDLEVERSION@@", appversion 
+  f.puts plist
+end
+
+`open #{appdir}`
