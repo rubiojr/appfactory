@@ -3,8 +3,6 @@ require 'rubygems'
 require 'choice'
 require 'fileutils'
 
-TMPLDIR="#{File.dirname(__FILE__)}/../template"
-
 Choice.options do
   banner 'Usage: appfactory <app_name>'
   header ''
@@ -19,31 +17,75 @@ Choice.options do
       exit
     end
   end
+  option :dsl do
+    long '--dsl=FILE'
+    short '-d'
+    desc 'DSL code to build the App'
+    action do |f|
+      if not File.exist?(f) or File.directory?(f)
+        $stderr.puts "#{f} is not a valid DSL file"
+        exit 1
+      end
+    end
+  end
+
+  option :vendor do
+    long '--vendor *LIBS'
+    desc 'Include the specified libraries'
+  end
 end
 
-appname = ARGV[0]
+TMPLDIR="#{File.dirname(__FILE__)}/../template"
+appname = ARGV.last
 
 if appname.nil?
+  $stderr.puts "Invalid application name"
   Choice.help
 end
-
 appdir = appname.downcase
-appversion = '0.1'
-puts "Creating application directory #{appdir}"
 if File.exist?(appdir)
   $stderr.puts "Directory #{appdir} already exists"
   exit 1
 end
+
+CONTENTS_DIR = "#{appdir}/#{appname}.app/Contents"
+RESOURCES_DIR = "#{CONTENTS_DIR}/Resources" 
+appversion = '0.1'
+
+
+if not Choice.choices[:dsl]
+  $stderr.puts "\nOption --dsl is required\n\n"
+  Choice.help
+  exit 1
+end
+
+puts "Creating application directory #{appdir}"
 Dir.mkdir appdir
 
 puts "Creating the Application Bundle..."
 FileUtils.cp_r("#{TMPLDIR}/appfactory.app.template", "#{appdir}/#{appname}.app")
 
-plist = IO.read("#{appdir}/#{appname}.app/Contents/Info.plist")
-File.open("#{appdir}/#{appname}.app/Contents/Info.plist", 'w') do |f|
+plist = IO.read("#{CONTENTS_DIR}/Info.plist")
+File.open("#{CONTENTS_DIR}/Info.plist", 'w') do |f|
   plist.gsub! "@@CFBUNDLENAME@@", appname
   plist.gsub! "@@CFBUNDLEVERSION@@", appversion 
   f.puts plist
+end
+
+if Choice.choices[:vendor]
+  Choice.choices[:vendor].each do |l|
+    File.open("#{RESOURCES_DIR}/Gemfile",'w') do |f|
+      f.puts "gem '#{l}'"
+    end
+    puts "Vendoring #{l} library..."
+    `gem bundle --manifest #{RESOURCES_DIR}/Gemfile`
+  end
+end
+
+puts "Adding the DSL file..."
+File.open("#{RESOURCES_DIR}/dsl.rb", 'w') do |f|
+  dsl = File.read(Choice.choices[:dsl])
+  f.puts dsl
 end
 
 `open #{appdir}`

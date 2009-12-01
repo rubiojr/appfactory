@@ -1,4 +1,6 @@
 framework 'Cocoa'
+$: << NSBundle.mainBundle.resourcePath.fileSystemRepresentation
+require 'growl'
 
 module AppFactory
  def self.resources_dir
@@ -15,6 +17,15 @@ module AppFactory
 
  def self.debug(msg)
    NSLog "DEBUG [#{app_name}]: #{msg}"
+ end
+
+ def register_growl_events(array = [])
+   a = array.map { |e| e.to_s }
+   Growl::Notifier.sharedInstance.register AppFactory.app_name, array
+ end
+
+ def growl(event_name, title, desc)
+   Growl.growl event_name.to_s, title, desc
  end
 
  def self.menu
@@ -57,31 +68,79 @@ module AppFactory
    status_bar
    @app.run
  end
+ 
+ def timer(interval, &block)
+    delegate = TimerDelegate.new
+    @timer = NSTimer.scheduledTimerWithTimeInterval interval.to_f, :target => delegate, :selector => "runTimer:", :userInfo => nil, :repeats => true
+    TimerDelegate.send(:class_eval, "def timerBlock=(blk); @timerBlock = blk; end")
+    delegate.send("timerBlock=".to_sym, block)
+ end
 
  def menu_item(title, &block)
     mi = NSMenuItem.new
     mi.title = title
-    mi.action = "#{title}Delegate:"
-    AppFactoryDelegate.send(:class_eval, "def #{title}Delegate=(blk); @#{title}Delegate = blk; end")
-    AppFactoryDelegate.send(:class_eval, "def #{title}Delegate(sender); @#{title}Delegate.call ; end")
+    dname = "delegate#{rand(999999999)}"
+    mi.action = "#{dname}:"
+    AppFactoryDelegate.send(:class_eval, "def #{dname}=(blk); @#{dname} = blk; end")
+    AppFactoryDelegate.send(:class_eval, "def #{dname}(sender); @#{dname}.call ; end")
     delegate = AppFactory.delegate
-    delegate.send("#{title}Delegate=".to_sym, block)
+    delegate.send("#{dname}=".to_sym, block)
     mi.target = delegate
-    AppFactory.menu.addItem mi
+    if @current_menu
+      @current_menu.addItem mi
+    else
+      AppFactory.menu.addItem mi
+    end
+ end
+ 
+ def menu(title)
+   if not @submenues
+     AppFactory.debug 'Init submenues collection'
+     @submenues = {}
+   end
+    m = nil
+    if @submenues.has_key? title
+      #existing menu
+      AppFactory.debug "Submenu #{title} already exists"
+      m = @submenues[title]
+    else
+      AppFactory.debug "Creating submenu #{title}"
+      m = NSMenu.new
+      @submenues[title] = m
+      m.initWithTitle title
+      mi = NSMenuItem.new
+      mi.title = title
+      mi.setSubmenu m
+      AppFactory.menu.addItem mi
+    end
+    @current_menu = m
+    yield m
+    @current_menu = nil
  end
 
  def self.delegate
    @delegate ||= AppFactoryDelegate.new
  end
 
+ def self.vendor_libs
+   Dir["#{resources_dir}/vendor/gems/gems/*"].each do |d|
+     AppFactory.debug "Adding #{d}/lib to RUBYLIB"
+     $: << "#{d}/lib"
+   end
+ end
+
+ class TimerDelegate
+   def runTimer(timer)
+     @timerBlock.call
+   end
+ end
  class AppFactoryDelegate
  end
 
 end
 
-$: << AppFactory.resources_dir
+AppFactory.vendor_libs
 include AppFactory
-require 'growl'
-require 'appmain'
+require 'dsl'
 
 AppFactory.start
