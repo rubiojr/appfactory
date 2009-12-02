@@ -28,31 +28,36 @@ module AppFactory
    Growl.growl event_name.to_s, title, desc
  end
 
- def self.menu
-  if not @menu
-    @menu = NSMenu.new
-    @menu.initWithTitle 'app_name'
-    mi = NSMenuItem.new
-    mi.title = 'Quit'
-    mi.action = 'terminate:'
-    mi.target = self
-    @menu.addItem mi
-    @menu
+ def self.top_menu
+  if not @top_menu
+    @top_menu = NSMenu.new
+    @top_menu.initWithTitle app_name
+    @top_menu
   else
     debug 'Meny already initialized...'
-    @menu
+    @top_menu
   end
  end
 
- def self.terminate(sender)
+ def clear_menu(menu)
+   menu.itemArray.each do |mi|
+     menu.removeItem mi
+   end
+ end
+
+ def self.terminate
    @app.terminate(self)
+ end
+
+ def open_url(url)
+   NSWorkspace.sharedWorkspace.openURL(NSURL.URLWithString(url))
  end
 
  def self.status_bar
    if not @status_bar
     @status_bar = NSStatusBar.systemStatusBar
     @status_item = @status_bar.statusItemWithLength(NSVariableStatusItemLength)
-    @status_item.setMenu menu 
+    @status_item.setMenu top_menu 
     img = NSImage.new.initWithContentsOfFile "#{AppFactory.resources_dir}/ruby_statusbar.png"
     @status_item.setImage(img)
     Growl.growl 'InitDone', app_name, "Here we go!"
@@ -93,6 +98,23 @@ module AppFactory
     end
  end
  
+ def menu_separator
+    if @current_menu
+      @current_menu.addItem NSMenuItem.separatorItem
+    else
+      puts NSMenuItem.separatorItem
+      AppFactory.top_menu.addItem NSMenuItem.separatorItem
+    end
+ end
+
+ def menu_quit
+    mi = NSMenuItem.new
+    mi.title = 'Quit'
+    mi.action = 'terminate:'
+    mi.target = AppFactory.delegate
+    AppFactory.top_menu.addItem mi
+ end
+ 
  def menu(title)
    if not @submenues
      AppFactory.debug 'Init submenues collection'
@@ -111,7 +133,7 @@ module AppFactory
       mi = NSMenuItem.new
       mi.title = title
       mi.setSubmenu m
-      AppFactory.menu.addItem mi
+      AppFactory.top_menu.addItem mi
     end
     @current_menu = m
     yield m
@@ -135,6 +157,9 @@ module AppFactory
    end
  end
  class AppFactoryDelegate
+   def terminate(sender)
+     AppFactory.terminate
+   end
  end
 
 end

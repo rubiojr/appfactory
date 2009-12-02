@@ -2,27 +2,24 @@ require 'open-uri'
 require 'restclient'
 require 'json'
 
-menu_item :Hello do 
-  growl :say_hello, 'FooApp', 'Hello!!'
-end 
+register_growl_events [:say_hello, :say_goodbye]
 
-menu_item :Goodbye do 
-  growl :say_goodbye, 'FooApp', 'Good bye!!'
-end 
-
-menu :Feeds do |m|
+menu 'delicious.com' do |m|
 end
 
-register_growl_events [:say_hello, :say_goodbye]
+menu_separator
+
+menu_quit
 
 timer 5 do
   AppFactory.debug 'running feed parser'
   json_feed = JSON.parse(RestClient.get "http://feeds.delicious.com/v2/json/")
-
-  json_feed.each do |i|
-    AppFactory.debug "Adding item: #{i['d']}"
-    menu :Feeds do
+  menu 'delicious.com' do |m|
+    clear_menu m
+    json_feed.each do |i|
+      AppFactory.debug "Adding item: #{i['d']}"
       menu_item i['d'] do
+        open_url i['u']
       end
     end
   end

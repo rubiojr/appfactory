@@ -4,6 +4,7 @@ Manifest.txt
 README.txt
 Rakefile
 bin/appfactory
+examples/appmain.rb
 lib/appfactory.rb
 template/appfactory.app.template/Contents/Info.plist
 template/appfactory.app.template/Contents/MacOS/appfactory

@@ -1,6 +1,6 @@
-=== 1.0.0 / 2009-11-30
+=== 0.1 / 2009-12-02
 
-* 1 major enhancement
+* 0.1 
 
-  * Birthday!
+  * Initial release!
 

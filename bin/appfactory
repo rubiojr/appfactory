@@ -2,6 +2,17 @@
 require 'rubygems'
 require 'choice'
 require 'fileutils'
+require 'pp'
+
+begin
+  v = Gem::Version.create Gem::RubyGemsVersion
+  req_version = Gem::Version.create('1.3.5')
+  if !(v >= req_version)
+    $stderr.puts "You need to have rubygems version >= 1.3.5 installed to use AppFactory"
+  end
+rescue Exception => e
+  $stderr.puts "Can't detect rubygems version. Make sure you have rubygems >= 1.3.5"
+end
 
 Choice.options do
   banner 'Usage: appfactory <app_name>'
@@ -29,19 +40,32 @@ Choice.options do
     end
   end
 
-  option :vendor do
-    long '--vendor *LIBS'
+  option :appname do
+    long '--appname=NAME'
+    short '-n'
+    desc 'Application Name'
+  end
+
+  option :bundle do
+    long '--bundle *LIBS'
     desc 'Include the specified libraries'
   end
 end
 
-TMPLDIR="#{File.dirname(__FILE__)}/../template"
-appname = ARGV.last
-
-if appname.nil?
-  $stderr.puts "Invalid application name"
-  Choice.help
+def check_required(*args)
+  args.each do |arg|
+    if !Choice.choices[arg.to_sym]
+      $stderr.puts "\nOption --#{arg.to_s} is required\n\n"
+      Choice.help
+      exit 1
+    end
+  end
 end
+
+check_required :dsl, :appname
+
+TMPLDIR="#{File.dirname(__FILE__)}/../template"
+appname = Choice.choices[:appname]
 appdir = appname.downcase
 if File.exist?(appdir)
   $stderr.puts "Directory #{appdir} already exists"
@@ -52,12 +76,6 @@ CONTENTS_DIR = "#{appdir}/#{appname}.app/Contents"
 RESOURCES_DIR = "#{CONTENTS_DIR}/Resources" 
 appversion = '0.1'
 
-
-if not Choice.choices[:dsl]
-  $stderr.puts "\nOption --dsl is required\n\n"
-  Choice.help
-  exit 1
-end
 
 puts "Creating application directory #{appdir}"
 Dir.mkdir appdir
@@ -72,8 +90,8 @@ File.open("#{CONTENTS_DIR}/Info.plist", 'w') do |f|
   f.puts plist
 end
 
-if Choice.choices[:vendor]
-  Choice.choices[:vendor].each do |l|
+if Choice.choices[:bundle]
+  Choice.choices[:bundle].each do |l|
     File.open("#{RESOURCES_DIR}/Gemfile",'w') do |f|
       f.puts "gem '#{l}'"
     end
