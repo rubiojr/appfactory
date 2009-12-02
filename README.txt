@@ -1,32 +1,34 @@
-= appfactory
+= AppFactory
 
-* FIX (url)
+* http://appfactory.netcorex.org
 
 == DESCRIPTION:
 
-FIX (describe your package)
+Small ruby DSL to create Mac OS X statusbar applications
 
 == FEATURES/PROBLEMS:
 
-* FIX (list of features or problems)
+* Experimental code ATM
 
 == SYNOPSIS:
 
-  FIX (code sample of usage)
+appfactory --dsl mydls.rb --appname MyTestApp
 
 == REQUIREMENTS:
 
-* FIX (list of requirements)
+* ruby 1.8          http://ruby-lang.org
+* rubygems 1.3.5    http://rubygems.org
+* MacRuby 0.5       http://macruby.org
 
 == INSTALL:
 
-* FIX (sudo gem install, anything else)
+gem install appfactory (from http://gemcutter.org)
 
 == LICENSE:
 
 (The MIT License)
 
-Copyright (c) 2009 FIX
+Copyright (c) 2009 Sergio Rubio <sergio@rubio.name>
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
